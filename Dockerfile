@@ -1,50 +1,27 @@
-# -------- deps --------
-FROM node:20-bookworm-slim AS deps
-WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  openssl ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-COPY package*.json ./
-RUN npm ci \
-  && npm install --no-save --no-package-lock lightningcss-linux-x64-gnu@1.29.2
+# Imagem base
+FROM node:20-alpine
 
-# -------- builder --------
-FROM node:20-bookworm-slim AS builder
-WORKDIR /app
-# ffmpeg + openssl também no build (útil p/ testes e libs que checam no build)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  ffmpeg openssl ca-certificates python3 python3-pip \
-  && python3 -m pip install --break-system-packages -U yt-dlp \
-  && rm -rf /var/lib/apt/lists/*
-COPY --from=deps /app/node_modules ./node_modules
+WORKDIR /usr/app
+
+COPY package.json ./
+
+# Instala dependências para build de addons nativos (como better-sqlite3)
+RUN apk add --no-cache python3 py3-pip make g++
+
+# Instala dependências do Node
+RUN npm install --legacy-peer-deps
+
 COPY . .
-# Prisma client (usa os binaryTargets do schema)
+
+# Gera os arquivos Prisma (caso use)
 RUN npx prisma generate
-# Build Next
-ENV NEXT_TELEMETRY_DISABLED=1
+
+# Gera o build de produção do Next.js
 RUN npm run build
 
-# -------- runner --------
-FROM node:20-bookworm-slim AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-# ffmpeg + openssl no runtime (ESSENCIAL)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  ffmpeg openssl ca-certificates python3 python3-pip \
-  && python3 -m pip install --break-system-packages -U yt-dlp \
-  && rm -rf /var/lib/apt/lists/*
-
-# Artefatos necessários
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/prisma ./prisma
-
-# Porta (ajuste se o EasyPanel expõe outra)
-
+# Expõe a porta da aplicação
 EXPOSE 8901
 
-# Aplica migrations e sobe o app
-# IMPORTANTE: DATABASE_URL precisa estar como env em runtime no EasyPanel
-CMD sh -c "npx prisma migrate deploy && npm run start"
+# Comando de inicialização
+CMD ["npm", "start"]
+# CMD ["npm", "run", "dev"]
