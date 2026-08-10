@@ -209,6 +209,18 @@ model HouseDocument {
 // CRM
 // ---------------------------------------------------------------------------
 
+enum PipelineStage {
+  START
+  IN_PROGRESS
+  NEGOTIATION
+  DONE
+}
+
+enum ClientOutcome {
+  SOLD
+  LOST
+}
+
 model Client {
   id          String   @id @default(cuid())
   name        String
@@ -219,6 +231,15 @@ model Client {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  /// Esteira do Kanban de leads (tela /admin/clients) — conceito separado do
+  /// Metadata.funnelStage (esse é granular por imóvel/interesse e é
+  /// atualizado pelo Max via WhatsApp; pipelineStage é só o board manual do
+  /// admin).
+  pipelineStage PipelineStage @default(START)
+  /// Só relevante quando pipelineStage = DONE — obrigatório nesse caso,
+  /// aplicado pela camada de serviço (client.service.ts zera ao sair de DONE).
+  outcome       ClientOutcome?
+
   favorites  Favorite[]
   interests  Interest[]
   metadata   Metadata?
@@ -226,6 +247,7 @@ model Client {
 
   @@unique([phone])
   @@index([createdAt])
+  @@index([pipelineStage])
 }
 
 model Favorite {
@@ -300,6 +322,7 @@ enum ActivityType {
   METADATA_UPDATE
   INTEREST_ADDED
   CONTACT_REQUEST
+  PIPELINE_UPDATE
 }
 
 model ClientActivity {

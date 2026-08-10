@@ -1,11 +1,12 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { clientRepository } from "@/modules/clients/repository/client.repository";
 import { toClientDetailDto, toClientListItemDto } from "@/modules/clients/dto/client.dto";
-import type { ContactRequestInput, UpdateMetadataInput } from "@/modules/clients/validators/client.validators";
+import type { ContactRequestInput, UpdateMetadataInput, UpdatePipelineInput } from "@/modules/clients/validators/client.validators";
 import type { ClientDetailDto, ClientListItemDto } from "@/modules/clients/types";
 import type { ClientFilterInput } from "@/modules/clients/validators/client.validators";
 import { CACHE_KEYS, cacheDelByPrefix, cacheWrap } from "@/lib/redis";
 import { sanitizeOptionalText, sanitizeText } from "@/lib/sanitize";
+import { triggerWelcomeCampaign } from "@/lib/fluxy-agents";
 import { createHash } from "crypto";
 import type { PaginatedResult } from "@/modules/houses/types";
 
@@ -34,6 +35,32 @@ export const clientService = {
     });
   },
 
+  /// Todos os clientes pros cards do Kanban de leads (/admin/clients) — sem
+  /// paginação nem cache (o board precisa refletir o estado atual assim que
+  /// um card é movido).
+  async listForKanban(): Promise<ClientListItemDto[]> {
+    const items = await clientRepository.findAllForKanban();
+    return items.map(toClientListItemDto);
+  },
+
+  /// Move um lead entre as esteiras do Kanban. outcome só é aceito (e exigido
+  /// pelo validator) quando o destino é DONE — sair de DONE sempre limpa o
+  /// outcome, mesmo que o caller tenha mandado algo.
+  async updatePipeline(id: string, input: UpdatePipelineInput): Promise<ClientListItemDto | null> {
+    const existing = await clientRepository.findById(id);
+    if (!existing) return null;
+
+    const outcome = input.pipelineStage === "DONE" ? (input.outcome ?? null) : null;
+
+    const updated = await clientRepository.update(id, {
+      pipelineStage: input.pipelineStage,
+      outcome,
+    });
+    await clientRepository.logActivity(id, "PIPELINE_UPDATE", { pipelineStage: input.pipelineStage, outcome });
+    await invalidateClientCaches(id);
+    return toClientListItemDto({ ...updated, _count: { interests: existing.interests?.length ?? 0 } });
+  },
+
   async getById(id: string): Promise<ClientDetailDto | null> {
     const cacheKey = CACHE_KEYS.clientDetail(id);
     return cacheWrap(cacheKey, 60, async () => {
@@ -53,6 +80,7 @@ export const clientService = {
     const email = input.email ? sanitizeText(input.email) : null;
 
     let client = await clientRepository.findByPhone(input.phone);
+    const isNewClient = !client;
 
     if (client) {
       client = await clientRepository.update(client.id, {
@@ -69,6 +97,10 @@ export const clientService = {
         email,
         notes,
       });
+    }
+
+    if (isNewClient && input.hasWhatsapp) {
+      void triggerWelcomeCampaign(input.phone, name);
     }
 
     if (input.favoriteHouseIds.length > 0) {

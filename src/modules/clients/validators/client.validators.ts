@@ -47,3 +47,15 @@ export const clientIdentitySchema = z.object({
   phone: z.string().trim().min(8).max(20),
   name: z.string().trim().min(2).max(120).optional(),
 });
+
+export const updatePipelineSchema = z
+  .object({
+    pipelineStage: z.enum(["START", "IN_PROGRESS", "NEGOTIATION", "DONE"]),
+    outcome: z.enum(["SOLD", "LOST"]).optional(),
+  })
+  .refine((data) => data.pipelineStage !== "DONE" || !!data.outcome, {
+    message: "Informe Vendido ou Perdido para concluir o atendimento.",
+    path: ["outcome"],
+  });
+
+export type UpdatePipelineInput = z.infer<typeof updatePipelineSchema>;

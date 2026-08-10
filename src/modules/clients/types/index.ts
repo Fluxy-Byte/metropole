@@ -5,6 +5,8 @@ export interface ClientListItemDto {
   hasWhatsapp: boolean;
   interestsCount: number;
   createdAt: string;
+  pipelineStage: string;
+  outcome: string | null;
 }
 
 export interface ClientDetailDto extends ClientListItemDto {

@@ -47,6 +47,16 @@ export const clientRepository = {
     return prisma.client.findUnique({ where: { phone } });
   },
 
+  /// Todos os clientes com os campos leves usados nos cards do Kanban — sem
+  /// paginação (o board mostra tudo de uma vez, agrupado por pipelineStage no
+  /// service/frontend).
+  findAllForKanban() {
+    return prisma.client.findMany({
+      include: { _count: { select: { interests: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+  },
+
   create(data: Prisma.ClientCreateInput) {
     return prisma.client.create({ data });
   },

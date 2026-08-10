@@ -19,6 +19,18 @@ const STAGE_LABELS: Record<string, string> = {
   LOST: "Perdido",
 };
 
+const PIPELINE_STAGE_LABELS: Record<string, string> = {
+  START: "Início Atendimento",
+  IN_PROGRESS: "Em Atendimento",
+  NEGOTIATION: "Em Negociação",
+  DONE: "Concluído",
+};
+
+const OUTCOME_LABELS: Record<string, string> = {
+  SOLD: "Vendido",
+  LOST: "Perdido",
+};
+
 const ACTIVITY_LABELS: Record<string, string> = {
   MESSAGE: "Mensagem",
   HOUSE_SENT: "Imóvel enviado",
@@ -39,7 +51,15 @@ export default async function AdminClientDetailPage({ params }: PageProps<"/admi
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-heading text-2xl font-bold text-foreground">{client.name}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-heading text-2xl font-bold text-foreground">{client.name}</h1>
+          <Badge variant="outline">{PIPELINE_STAGE_LABELS[client.pipelineStage] ?? client.pipelineStage}</Badge>
+          {client.outcome && (
+            <Badge variant={client.outcome === "SOLD" ? "default" : "destructive"}>
+              {OUTCOME_LABELS[client.outcome] ?? client.outcome}
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           Cliente desde {new Date(client.createdAt).toLocaleDateString("pt-BR")}
         </p>

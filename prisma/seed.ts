@@ -180,7 +180,7 @@ async function seedAccessTypes() {
       isSystem: true,
       permissions: {
         HOUSES: { VIEW: true, CREATE: true, EDIT: true, DELETE: true },
-        CLIENTS: { VIEW: true },
+        CLIENTS: { VIEW: true, EDIT: true },
         AUDIT: { VIEW: true },
         ACCESS: { MANAGE: true },
       },
@@ -194,7 +194,7 @@ async function seedAccessTypes() {
       isSystem: true,
       permissions: {
         HOUSES: { VIEW: true, CREATE: true, EDIT: true, DELETE: false },
-        CLIENTS: { VIEW: true },
+        CLIENTS: { VIEW: true, EDIT: true },
         AUDIT: { VIEW: false },
         ACCESS: { MANAGE: false },
       },

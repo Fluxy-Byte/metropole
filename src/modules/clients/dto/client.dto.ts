@@ -11,6 +11,8 @@ export function toClientListItemDto(client: ClientForList): ClientListItemDto {
     hasWhatsapp: client.hasWhatsapp,
     interestsCount: client._count.interests,
     createdAt: client.createdAt.toISOString(),
+    pipelineStage: client.pipelineStage,
+    outcome: client.outcome,
   };
 }
 
@@ -31,6 +33,8 @@ export function toClientDetailDto(client: ClientForDetail): ClientDetailDto {
     notes: client.notes,
     interestsCount: client.interests.length,
     createdAt: client.createdAt.toISOString(),
+    pipelineStage: client.pipelineStage,
+    outcome: client.outcome,
     metadata: client.metadata
       ? {
           incomeRange: client.metadata.incomeRange,

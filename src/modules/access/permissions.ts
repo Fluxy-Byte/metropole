@@ -6,7 +6,7 @@ export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
 
 export const RESOURCE_ACTIONS: Record<PermissionResource, PermissionAction[]> = {
   HOUSES: ["VIEW", "CREATE", "EDIT", "DELETE"],
-  CLIENTS: ["VIEW"],
+  CLIENTS: ["VIEW", "EDIT"],
   AUDIT: ["VIEW"],
   ACCESS: ["MANAGE"],
 };
