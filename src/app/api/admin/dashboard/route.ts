@@ -1,10 +1,10 @@
 import { dashboardService } from "@/modules/dashboard/services/dashboard.service";
 import { jsonOk, handleApiError } from "@/lib/api-response";
-import { requireRole } from "@/lib/session";
+import { requireUser } from "@/lib/session";
 
 export async function GET() {
   try {
-    await requireRole("ADMIN", "AGENT");
+    await requireUser();
     const summary = await dashboardService.getSummary();
     return jsonOk(summary);
   } catch (error) {

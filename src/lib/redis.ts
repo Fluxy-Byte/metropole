@@ -96,4 +96,6 @@ export const CACHE_KEYS = {
   clientsListPrefix: "clients:list:",
   clientDetail: (id: string) => `clients:detail:${id}`,
   clientDetailPrefix: "clients:detail:",
+  accessTypePermissions: (id: string) => `access-types:permissions:${id}`,
+  accessTypesListPrefix: "access-types:list:",
 } as const;

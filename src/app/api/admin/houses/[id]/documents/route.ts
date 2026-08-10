@@ -1,6 +1,6 @@
 import { houseMediaService } from "@/modules/houses/services/house-media.service";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api-response";
-import { requireRole } from "@/lib/session";
+import { requirePermission } from "@/lib/session";
 import { auditService } from "@/modules/audit/services/audit.service";
 import { getRequestMeta } from "@/lib/request-meta";
 
@@ -8,7 +8,7 @@ const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 export async function POST(request: Request, { params }: RouteContext<"/api/admin/houses/[id]/documents">) {
   try {
-    const user = await requireRole("ADMIN", "AGENT");
+    const user = await requirePermission("HOUSES", "EDIT");
     const { id } = await params;
 
     const formData = await request.formData();

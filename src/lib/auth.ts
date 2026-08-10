@@ -14,7 +14,6 @@ function detectDevice(userAgent: string | null): string | null {
 
 const AUDITED_PATHS: Record<string, "LOGIN" | "LOGOUT" | "CREATE"> = {
   "/sign-in/email": "LOGIN",
-  "/sign-up/email": "CREATE",
   "/sign-out": "LOGOUT",
 };
 
@@ -39,6 +38,7 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
     minPasswordLength: 8,
+    disableSignUp: true,
     sendResetPassword: async ({ user, url }) => {
       await sendMail(
         user.email,
@@ -49,10 +49,15 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      role: {
+      accessTypeId: {
         type: "string",
         input: false,
-        defaultValue: "AGENT",
+        required: true,
+      },
+      isActive: {
+        type: "boolean",
+        input: false,
+        defaultValue: true,
       },
       cpf: {
         type: "string",

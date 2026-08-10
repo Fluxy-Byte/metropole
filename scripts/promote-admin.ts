@@ -11,8 +11,14 @@ if (!email) {
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-prisma.user
-  .update({ where: { email }, data: { role: "ADMIN" } })
-  .then((u) => console.log("promoted", u.email, u.role))
+prisma.accessType
+  .findUniqueOrThrow({ where: { name: "Administrador" } })
+  .then((accessType) =>
+    prisma.user.update({
+      where: { email },
+      data: { accessTypeId: accessType.id, isActive: true },
+    }),
+  )
+  .then((u) => console.log("promoted", u.email, "-> Administrador"))
   .catch((e) => console.error(e))
   .finally(() => prisma.$disconnect());

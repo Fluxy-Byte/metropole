@@ -1,12 +1,12 @@
 import { clientService } from "@/modules/clients/services/client.service";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api-response";
-import { requireRole } from "@/lib/session";
+import { requirePermission } from "@/lib/session";
 import { auditService } from "@/modules/audit/services/audit.service";
 import { getRequestMeta } from "@/lib/request-meta";
 
 export async function GET(request: Request, { params }: RouteContext<"/api/admin/clients/[id]">) {
   try {
-    const user = await requireRole("ADMIN", "AGENT");
+    const user = await requirePermission("CLIENTS", "VIEW");
     const { id } = await params;
     const client = await clientService.getById(id);
     if (!client) return jsonError("Cliente não encontrado", 404);

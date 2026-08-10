@@ -1,13 +1,14 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-
-export type AppRole = "ADMIN" | "AGENT";
+import { accessTypeService } from "@/modules/access/services/access-type.service";
+import { hasPermission, type PermissionAction, type PermissionResource } from "@/modules/access/permissions";
 
 export interface AppUser {
   id: string;
   name: string;
   email: string;
-  role: AppRole;
+  accessTypeId: string;
+  isActive: boolean;
   image?: string | null;
 }
 
@@ -25,15 +26,19 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 
 export async function requireUser(): Promise<AppUser> {
   const user = await getCurrentUser();
-  if (!user) {
+  if (!user || !user.isActive) {
     throw new Error("UNAUTHENTICATED");
   }
   return user;
 }
 
-export async function requireRole(...roles: AppRole[]): Promise<AppUser> {
+export async function requirePermission(
+  resource: PermissionResource,
+  action: PermissionAction,
+): Promise<AppUser> {
   const user = await requireUser();
-  if (!roles.includes(user.role)) {
+  const matrix = await accessTypeService.getPermissions(user.accessTypeId);
+  if (!hasPermission(matrix, resource, action)) {
     throw new Error("FORBIDDEN");
   }
   return user;

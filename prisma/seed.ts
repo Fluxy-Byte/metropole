@@ -170,7 +170,41 @@ const DEMO_HOUSES = [
   },
 ];
 
+async function seedAccessTypes() {
+  console.log("Seeding default access types...");
+  await prisma.accessType.upsert({
+    where: { name: "Administrador" },
+    update: {},
+    create: {
+      name: "Administrador",
+      isSystem: true,
+      permissions: {
+        HOUSES: { VIEW: true, CREATE: true, EDIT: true, DELETE: true },
+        CLIENTS: { VIEW: true },
+        AUDIT: { VIEW: true },
+        ACCESS: { MANAGE: true },
+      },
+    },
+  });
+  await prisma.accessType.upsert({
+    where: { name: "Corretor" },
+    update: {},
+    create: {
+      name: "Corretor",
+      isSystem: true,
+      permissions: {
+        HOUSES: { VIEW: true, CREATE: true, EDIT: true, DELETE: false },
+        CLIENTS: { VIEW: true },
+        AUDIT: { VIEW: false },
+        ACCESS: { MANAGE: false },
+      },
+    },
+  });
+}
+
 async function main() {
+  await seedAccessTypes();
+
   console.log("Seeding categories...");
   const categories = await Promise.all(
     CATEGORIES.map((name, index) =>

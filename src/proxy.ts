@@ -1,8 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
+import { accessTypeService } from "@/modules/access/services/access-type.service";
+import { hasPermission, type PermissionAction, type PermissionResource } from "@/modules/access/permissions";
 
-const PUBLIC_ADMIN_PATHS = ["/admin/signin", "/admin/signup"];
-const ADMIN_ONLY_PATHS = ["/admin/audit", "/api/admin/audit"];
+const PUBLIC_ADMIN_PATHS = ["/admin/signin"];
+
+const PROTECTED_PATHS: { prefix: string; resource: PermissionResource; action: PermissionAction }[] = [
+  { prefix: "/admin/audit", resource: "AUDIT", action: "VIEW" },
+  { prefix: "/api/admin/audit", resource: "AUDIT", action: "VIEW" },
+  { prefix: "/admin/users", resource: "ACCESS", action: "MANAGE" },
+  { prefix: "/api/admin/users", resource: "ACCESS", action: "MANAGE" },
+  { prefix: "/admin/access-types", resource: "ACCESS", action: "MANAGE" },
+  { prefix: "/api/admin/access-types", resource: "ACCESS", action: "MANAGE" },
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -19,7 +29,9 @@ export async function proxy(request: NextRequest) {
 
   const session = await auth.api.getSession({ headers: request.headers });
 
-  if (!session) {
+  const sessionUser = session?.user as { accessTypeId?: string; isActive?: boolean } | undefined;
+
+  if (!session || sessionUser?.isActive === false) {
     if (isApiAdmin) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
@@ -28,13 +40,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  const role = (session.user as { role?: string }).role;
-
-  if (ADMIN_ONLY_PATHS.some((path) => pathname.startsWith(path)) && role !== "ADMIN") {
-    if (isApiAdmin) {
-      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+  const rule = PROTECTED_PATHS.find((r) => pathname.startsWith(r.prefix));
+  if (rule) {
+    const matrix = await accessTypeService.getPermissions(sessionUser!.accessTypeId!);
+    if (!hasPermission(matrix, rule.resource, rule.action)) {
+      if (isApiAdmin) {
+        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
-    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return NextResponse.next();

@@ -18,6 +18,7 @@ export function Logo({ className, dark }: { className?: string; dark?: boolean }
         width={372}
         height={367}
         priority
+        unoptimized
         className="size-9"
       />
       <span className="leading-tight">

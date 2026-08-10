@@ -1,6 +1,6 @@
 import { houseMediaService } from "@/modules/houses/services/house-media.service";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api-response";
-import { requireRole } from "@/lib/session";
+import { requirePermission } from "@/lib/session";
 import { auditService } from "@/modules/audit/services/audit.service";
 import { getRequestMeta } from "@/lib/request-meta";
 
@@ -9,7 +9,7 @@ export async function DELETE(
   { params }: RouteContext<"/api/admin/houses/[id]/documents/[docId]">,
 ) {
   try {
-    const user = await requireRole("ADMIN", "AGENT");
+    const user = await requirePermission("HOUSES", "EDIT");
     const { id, docId } = await params;
     const document = await houseMediaService.removeDocument(id, docId);
     if (!document) return jsonError("Documento não encontrado", 404);

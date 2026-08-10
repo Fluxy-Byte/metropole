@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server";
 import { auditService } from "@/modules/audit/services/audit.service";
 import { jsonOk, handleApiError } from "@/lib/api-response";
-import { requireRole } from "@/lib/session";
+import { requirePermission } from "@/lib/session";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole("ADMIN");
+    await requirePermission("AUDIT", "VIEW");
     const params = request.nextUrl.searchParams;
     const result = await auditService.list({
       page: Number(params.get("page") ?? 1),

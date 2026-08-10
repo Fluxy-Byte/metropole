@@ -1,13 +1,13 @@
 import { houseService } from "@/modules/houses/services/house.service";
 import { updateHouseSchema } from "@/modules/houses/validators/house.validators";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api-response";
-import { requireRole } from "@/lib/session";
+import { requirePermission } from "@/lib/session";
 import { auditService } from "@/modules/audit/services/audit.service";
 import { getRequestMeta } from "@/lib/request-meta";
 
 export async function GET(_request: Request, { params }: RouteContext<"/api/admin/houses/[id]">) {
   try {
-    await requireRole("ADMIN", "AGENT");
+    await requirePermission("HOUSES", "VIEW");
     const { id } = await params;
     const house = await houseService.getById(id);
     if (!house) return jsonError("Imóvel não encontrado", 404);
@@ -19,7 +19,7 @@ export async function GET(_request: Request, { params }: RouteContext<"/api/admi
 
 export async function PATCH(request: Request, { params }: RouteContext<"/api/admin/houses/[id]">) {
   try {
-    const user = await requireRole("ADMIN", "AGENT");
+    const user = await requirePermission("HOUSES", "EDIT");
     const { id } = await params;
     const body = await request.json();
     const input = updateHouseSchema.parse(body);
@@ -46,7 +46,7 @@ export async function PATCH(request: Request, { params }: RouteContext<"/api/adm
 
 export async function DELETE(request: Request, { params }: RouteContext<"/api/admin/houses/[id]">) {
   try {
-    const user = await requireRole("ADMIN");
+    const user = await requirePermission("HOUSES", "DELETE");
     const { id } = await params;
     const removed = await houseService.remove(id);
     if (!removed) return jsonError("Imóvel não encontrado", 404);

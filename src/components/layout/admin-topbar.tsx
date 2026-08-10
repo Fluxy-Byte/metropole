@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
-import type { AppRole, AppUser } from "@/lib/session";
+import type { AppUser } from "@/lib/session";
+import { hasPermission, type PermissionMatrix } from "@/modules/access/permissions";
 import { ADMIN_NAV_ITEMS } from "@/components/layout/admin-nav-items";
 
 function initials(name: string) {
@@ -21,7 +22,15 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function AdminTopbar({ user, role }: { user: AppUser; role: AppRole }) {
+export function AdminTopbar({
+  user,
+  accessTypeName,
+  permissions,
+}: {
+  user: AppUser;
+  accessTypeName: string;
+  permissions: PermissionMatrix;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -38,7 +47,9 @@ export function AdminTopbar({ user, role }: { user: AppUser; role: AppRole }) {
             </SheetTitle>
           </SheetHeader>
           <nav className="mt-4 flex flex-col gap-1 px-4">
-            {ADMIN_NAV_ITEMS.filter((item) => !item.adminOnly || role === "ADMIN").map((item) => {
+            {ADMIN_NAV_ITEMS.filter(
+              (item) => !item.permission || hasPermission(permissions, item.permission.resource, item.permission.action),
+            ).map((item) => {
               const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
               return (
                 <Link
@@ -63,7 +74,7 @@ export function AdminTopbar({ user, role }: { user: AppUser; role: AppRole }) {
       <div className="flex items-center gap-3">
         <div className="text-right">
           <p className="text-sm font-medium leading-none">{user.name}</p>
-          <p className="text-xs text-muted-foreground">{role === "ADMIN" ? "Administrador" : "Corretor"}</p>
+          <p className="text-xs text-muted-foreground">{accessTypeName}</p>
         </div>
         <Avatar>
           <AvatarFallback className="bg-primary text-primary-foreground">

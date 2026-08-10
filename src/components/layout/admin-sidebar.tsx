@@ -6,10 +6,10 @@ import { LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
-import type { AppRole } from "@/lib/session";
+import { hasPermission, type PermissionMatrix } from "@/modules/access/permissions";
 import { ADMIN_NAV_ITEMS } from "@/components/layout/admin-nav-items";
 
-export function AdminSidebar({ role }: { role: AppRole }) {
+export function AdminSidebar({ permissions }: { permissions: PermissionMatrix }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -20,7 +20,9 @@ export function AdminSidebar({ role }: { role: AppRole }) {
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
-        {ADMIN_NAV_ITEMS.filter((item) => !item.adminOnly || role === "ADMIN").map((item) => {
+        {ADMIN_NAV_ITEMS.filter(
+          (item) => !item.permission || hasPermission(permissions, item.permission.resource, item.permission.action),
+        ).map((item) => {
           const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link

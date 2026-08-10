@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -8,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -72,9 +72,8 @@ export default function SignInPage() {
 
           <Field data-invalid={!!errors.password}>
             <FieldLabel htmlFor="password">Senha</FieldLabel>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               aria-invalid={!!errors.password}
               {...register("password")}
             />
@@ -87,13 +86,6 @@ export default function SignInPage() {
           </Button>
         </FieldGroup>
       </form>
-
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Ainda não tem uma conta?{" "}
-        <Link href="/admin/signup" className="font-medium text-accent hover:underline">
-          Cadastre-se
-        </Link>
-      </p>
     </div>
   );
 }

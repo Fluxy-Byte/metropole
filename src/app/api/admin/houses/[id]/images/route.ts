@@ -1,6 +1,6 @@
 import { houseMediaService } from "@/modules/houses/services/house-media.service";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api-response";
-import { requireRole } from "@/lib/session";
+import { requirePermission } from "@/lib/session";
 import { auditService } from "@/modules/audit/services/audit.service";
 import { getRequestMeta } from "@/lib/request-meta";
 
@@ -9,7 +9,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 export async function POST(request: Request, { params }: RouteContext<"/api/admin/houses/[id]/images">) {
   try {
-    const user = await requireRole("ADMIN", "AGENT");
+    const user = await requirePermission("HOUSES", "EDIT");
     const { id } = await params;
 
     const formData = await request.formData();
