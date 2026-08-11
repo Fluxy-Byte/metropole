@@ -40,6 +40,20 @@ export const houseMediaService = {
     return uploads;
   },
 
+  async setCoverImage(houseId: string, imageId: string) {
+    const image = await prisma.houseImage.findFirst({ where: { id: imageId, houseId } });
+    if (!image) return null;
+    if (image.isCover) return image;
+
+    await prisma.$transaction([
+      prisma.houseImage.updateMany({ where: { houseId, isCover: true }, data: { isCover: false } }),
+      prisma.houseImage.update({ where: { id: imageId }, data: { isCover: true } }),
+    ]);
+
+    await invalidate(houseId);
+    return { ...image, isCover: true };
+  },
+
   async removeImage(houseId: string, imageId: string) {
     const image = await prisma.houseImage.findFirst({ where: { id: imageId, houseId } });
     if (!image) return null;

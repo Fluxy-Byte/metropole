@@ -20,6 +20,7 @@ export function HouseImageUploader({ houseId, images }: { houseId: string; image
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [settingCoverId, setSettingCoverId] = useState<string | null>(null);
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -50,6 +51,19 @@ export function HouseImageUploader({ houseId, images }: { houseId: string; image
       toast.error("Falha ao remover imagem");
     } finally {
       setRemovingId(null);
+    }
+  }
+
+  async function handleSetCover(imageId: string) {
+    setSettingCoverId(imageId);
+    try {
+      await http.patch(`/admin/houses/${houseId}/images/${imageId}`);
+      toast.success("Foto de capa atualizada");
+      router.refresh();
+    } catch {
+      toast.error("Falha ao definir a foto de capa");
+    } finally {
+      setSettingCoverId(null);
     }
   }
 
@@ -84,10 +98,26 @@ export function HouseImageUploader({ houseId, images }: { houseId: string; image
             {images.map((image) => (
               <div key={image.id} className="group relative aspect-square overflow-hidden rounded-lg bg-muted">
                 <Image src={image.url} alt="" fill className="object-cover" />
-                {image.isCover && (
+                {image.isCover ? (
                   <span className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
                     <Star className="size-3 fill-current" /> Capa
                   </span>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="absolute top-1.5 left-1.5 h-7 gap-1 px-2 text-[11px] opacity-0 transition-opacity group-hover:opacity-100"
+                    disabled={settingCoverId === image.id}
+                    onClick={() => handleSetCover(image.id)}
+                  >
+                    {settingCoverId === image.id ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <Star className="size-3" />
+                    )}
+                    Tornar capa
+                  </Button>
                 )}
                 <Button
                   type="button"
