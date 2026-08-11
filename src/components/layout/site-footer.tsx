@@ -98,7 +98,7 @@ export function SiteFooter() {
 
       <Container className="flex flex-col items-center justify-between gap-2 py-6 text-xs text-primary-foreground/60 sm:flex-row">
         <p>© {new Date().getFullYear()} Metrópole Imóveis. Todos os direitos reservados.</p>
-        <p>CRECI 00000-J · Uberlândia - MG</p>
+        <p>CRECI 53085-J · Uberlândia - MG</p>
       </Container>
     </footer>
   );
